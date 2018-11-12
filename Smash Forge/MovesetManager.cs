@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using OpenTK;
 using SALT.Moveset.AnimCMD;
-using System.IO;
-using System.Security.Cryptography;
-using OpenTK;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 
 namespace Smash_Forge
 {

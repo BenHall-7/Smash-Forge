@@ -150,6 +150,7 @@
     <Compile Include="ACMDScript.cs" />
     <Compile Include="Animation.cs" />
     <Compile Include="CharacterParamManager.cs" />
+    <Compile Include="FighterManager.cs" />
     <Compile Include="Filetypes\Application\Config.cs" />
     <Compile Include="DiscordSettings.cs" />
     <Compile Include="Filetypes\Animation\BCHan.cs" />

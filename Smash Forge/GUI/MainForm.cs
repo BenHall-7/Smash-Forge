@@ -791,6 +791,8 @@ namespace Smash_Forge
                 ofd.Title = "Character Folder";
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
+                    FighterManager fighter = new FighterManager(new DirectoryInfo(ofd.SelectedPath));
+                    return;
                     MainForm.Instance.Progress = new ProgressAlert();
                     MainForm.Instance.Progress.StartPosition = FormStartPosition.CenterScreen;
                     MainForm.Instance.Progress.ProgressValue = 0;

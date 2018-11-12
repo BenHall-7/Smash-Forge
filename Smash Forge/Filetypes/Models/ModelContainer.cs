@@ -27,7 +27,7 @@ namespace Smash_Forge
                 nud = value;
                 if (nud != null && xmb != null)
                     nud.SetPropertiesFromXMB(xmb);
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private NUD nud;
@@ -41,7 +41,7 @@ namespace Smash_Forge
             set
             {
                 nut = value;
-                Refresh();
+                RefreshTreeNodes();
 
                 if (nud != null)
                     nud.CheckTexIdErrors(nut);
@@ -58,7 +58,7 @@ namespace Smash_Forge
             set
             {
                 bntx = value;
-                Refresh();
+                RefreshTreeNodes();
 
             }
         }
@@ -77,7 +77,7 @@ namespace Smash_Forge
                     vbn = new VBN();
                 if (JTB != null)
                     vbn.JointTable = JTB;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private VBN vbn;
@@ -91,7 +91,7 @@ namespace Smash_Forge
             set
             {
                 mta = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private MTA mta;
@@ -105,7 +105,7 @@ namespace Smash_Forge
             set
             {
                 bfres_mta = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         public BFRES.MTA bfres_mta;
@@ -119,7 +119,7 @@ namespace Smash_Forge
             set
             {
                 moi = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private MOI moi;
@@ -135,7 +135,7 @@ namespace Smash_Forge
                 jtb = value;
                 if (VBN != null)
                     VBN.JointTable = jtb;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private JTB jtb;
@@ -151,7 +151,7 @@ namespace Smash_Forge
                 xmb = value;
                 if (NUD != null)
                     NUD.SetPropertiesFromXMB(xmb);
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private XMBFile xmb;
@@ -166,7 +166,7 @@ namespace Smash_Forge
             set
             {
                 bch = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private BCH bch;
@@ -180,7 +180,7 @@ namespace Smash_Forge
             set
             {
                 bfres = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private BFRES bfres;
@@ -194,7 +194,7 @@ namespace Smash_Forge
             set
             {
                 kcl = value;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private KCL kcl;
@@ -209,7 +209,7 @@ namespace Smash_Forge
             {
                 datMelee = value;
                 VBN = datMelee.bones;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private DAT datMelee;
@@ -224,13 +224,12 @@ namespace Smash_Forge
             {
                 _meleeData = value;
                 //VBN = datMelee.bones;
-                Refresh();
+                RefreshTreeNodes();
             }
         }
         private MeleeDataNode _meleeData;
 
         public static Dictionary<string, SkelAnimation> Animations { get; set; }
-        public static MovesetManager Moveset { get; set; }
 
         public ModelContainer()
         {
@@ -243,10 +242,122 @@ namespace Smash_Forge
             jtb = new JTB();
             XMB = new XMBFile();
             Checked = true;
-            Refresh();
+            RefreshTreeNodes();
+        }
+        public ModelContainer(string[] files)
+        {
+            string pathNUD = "";
+            string pathVBN = "";
+            string pathJTB = "";
+            string pathSB = "";
+            string pathNUT = "";
+            string pathMTA = "";
+            string pathMOI = "";
+            string pathXMB = "";
+            List<string> pacs = new List<string>();
+            foreach (string fPath in files)
+            {
+                switch (fPath.Substring(fPath.LastIndexOf('.')))
+                {
+                    case ".nut":
+                        pathNUT = fPath; continue;
+                    case ".vbn":
+                        pathVBN = fPath; continue;
+                    case ".jtb":
+                        pathJTB = fPath; continue;
+                    case ".sb":
+                        pathSB = fPath; continue;
+                    case ".mta":
+                        pathMTA = fPath; continue;
+                    case ".moi":
+                        pathMOI = fPath; continue;
+                    case ".xmb":
+                        pathXMB = fPath; continue;
+                    case ".pac":
+                        pacs.Add(fPath); continue;
+                }
+                if (fPath.EndsWith("model.nud"))
+                {
+                    pathNUD = fPath;
+                    continue;
+                }
+                if (fPath.StartsWith("bindpose"))
+                    pathVBN = fPath;
+            }
+            NUD = new NUD(pathNUD);
+            if (NUD != null)
+                NUD.MergePoly();
+
+            OpenSkeleton(pathVBN, pathJTB, pathSB);
+            OpenNut(pathNUT);
+            OpenPacs(pacs);
+            OpenModelXmb(pathXMB);
+            OpenMta(pathMTA);
+            OpenMoi(pathMOI);
         }
 
-        public void Refresh()
+        public void OpenSkeleton(string pathVBN, string pathJTB, string pathSB)
+        {
+            if (string.IsNullOrEmpty(pathVBN)) return;
+            VBN = new VBN(pathVBN);
+            if (!string.IsNullOrEmpty(pathJTB))
+                JTB = new JTB(pathJTB);
+            if (!string.IsNullOrEmpty(pathSB))
+                VBN.SwingBones.Read(pathSB);
+        }
+        public void OpenNut(string pathNUT)
+        {
+            if (string.IsNullOrEmpty(pathNUT)) return;
+            NUT = new NUT(pathNUT);
+            Runtime.TextureContainers.Add(NUT);
+            Runtime.glTexturesNeedRefreshing = true;
+        }
+        public void OpenPacs(List<string> pacs)
+        {
+            foreach (string pac in pacs)
+            {
+                PAC p = new PAC();
+                p.Read(pac);
+                byte[] data;
+                if (p.Files.TryGetValue("display", out data))
+                {
+                    MTA mta = new MTA();
+                    mta.read(new FileData(data));
+                    NUD.ApplyMta(mta, 0);
+                }
+                if (p.Files.TryGetValue("default.mta", out data))
+                {
+                    MTA mta = new MTA();
+                    mta.read(new FileData(data));
+                    NUD.ApplyMta(mta, 0);
+                }
+            }
+        }
+        public void OpenModelXmb(string pathXMB)
+        {
+            if (string.IsNullOrEmpty(pathXMB)) return;
+            XMB = new XMBFile(pathXMB);
+        }
+        public void OpenMta(string pathMTA)
+        {
+            if (string.IsNullOrEmpty(pathMTA)) return;
+            try
+            {
+                MTA = new MTA();
+                MTA.Read(pathMTA);
+            }
+            catch
+            {
+                MTA = null;
+            }
+        }
+        public void OpenMoi(string pathMOI)
+        {
+            if (string.IsNullOrEmpty(pathMOI)) return;
+            MOI = new MOI(pathMOI);
+        }
+
+        public void RefreshTreeNodes()
         {
             Nodes.Clear();
 
